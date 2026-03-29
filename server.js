@@ -3,15 +3,21 @@ const cors = require("cors");
 const puppeteer = require("puppeteer");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // ← Render এর জন্য এটা খুব জরুরি
 
 app.use(cors());
 app.use(express.json());
 
+// Root route
 app.get("/", (req, res) => {
-  res.json({ message: "Design Analyzer Server cholche!" });
+  res.json({
+    message: "Design Analyzer Server is running! 🚀",
+    status: "ok",
+    port: PORT,
+  });
 });
 
+// Analyze endpoint
 app.post("/analyze", async (req, res) => {
   const { url } = req.body;
 
@@ -22,11 +28,24 @@ app.post("/analyze", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-zygote",
+        "--single-process", // Free/Starter plan এ RAM বাঁচায়
+      ],
+      // executablePath যদি দরকার হয় (Render এ)
+      // executablePath: '/opt/render/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome'
     });
 
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+
+    await page.goto(url, {
+      waitUntil: "networkidle2",
+      timeout: 60000,
+    });
 
     // Fonts
     const fonts = await page.evaluate(() => {
@@ -80,10 +99,15 @@ app.post("/analyze", async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Error:", err.message);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 });
 
-app.listen(PORT, () => {
-  console.log("Server running at http://localhost:3000");
+// Listen on all interfaces (Render এর জন্য খুব জরুরি)
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running at http://0.0.0.0:${PORT}`);
 });
