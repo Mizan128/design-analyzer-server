@@ -1,39 +1,57 @@
 import express from "express";
+import cors from "cors";
 
 const app = express();
 
+// ✅ JSON support
 app.use(express.json());
 
-// ✅ SIMPLE CORS FIX (NO LIB ISSUE)
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
+// ✅ CORS FIX (IMPORTANT)
+app.use(
+  cors({
+    origin: "*", // development এর জন্য OK
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  }),
+);
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+// ✅ extra safety for preflight request
+app.options("*", cors());
 
-  next();
-});
-
-// TEST
+// ----------------------
+// TEST ROUTE
+// ----------------------
 app.get("/", (req, res) => {
-  res.send("Server is running");
+  res.send("Server is running 🚀");
 });
 
-// ANALYZE API
-app.post("/analyze", (req, res) => {
-  res.json({
-    success: true,
-    colors: ["#ffffff", "#000000"],
-    fonts: ["Roboto"],
-    images: 10,
-  });
+// ----------------------
+// ANALYZE ROUTE
+// ----------------------
+app.post("/analyze", async (req, res) => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ error: "URL missing" });
+    }
+
+    // এখানে তোমার puppeteer / analysis logic থাকবে
+    res.json({
+      success: true,
+      message: "Analysis working",
+      url: url,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-
+// ----------------------
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
