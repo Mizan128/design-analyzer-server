@@ -40,7 +40,7 @@ const detectLayout = require("./analyzer/layoutDetector");
 const detectHierarchy = require("./analyzer/hierarchyDetector");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ✅ CORS allow করা হয়েছে যাতে Wix থেকে request আসতে পারে
 app.use(cors());
@@ -200,6 +200,6 @@ function buildProblemsAndSolutions({
   return results;
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Design Analyzer Server চলছে: http://localhost:${PORT}`);
 });
