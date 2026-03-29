@@ -1,37 +1,33 @@
 import express from "express";
-import cors from "cors";
 
 const app = express();
 
-// ✅ MUST: CORS FIRST
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
-  }),
-);
-
-// ✅ MUST: handle preflight
-app.options("*", cors());
-
-// JSON middleware
 app.use(express.json());
 
-// TEST ROUTE
+// ✅ SIMPLE CORS FIX (NO LIB ISSUE)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+// TEST
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
-// ANALYZE ROUTE
+// ANALYZE API
 app.post("/analyze", (req, res) => {
-  const { url } = req.body;
-
   res.json({
     success: true,
-    url: url,
     colors: ["#ffffff", "#000000"],
-    fonts: ["Roboto", "Inter"],
+    fonts: ["Roboto"],
     images: 10,
   });
 });
